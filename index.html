@@ -338,7 +338,6 @@
 
     <!-- JAVASCRIPT -->
     <script>
-        // Cấu hình các trường thông tin chuẩn theo yêu cầu mới (đã bỏ hình thức sở hữu, thêm số lượng bình chữa cháy, năm sinh cố định chủ cơ sở)
         const columnsSchema = [
             'Tên cơ sở', 'Địa chỉ cơ sở', 'TDP', 'Ngành nghề', 'Tổng số phòng trọ', 'Số lượng bình chữa cháy',
             'Họ và tên chủ cơ sở', 'Năm sinh', 'Tuổi', 'Giới tính', 'Dân tộc', 'Tôn giáo', 
@@ -351,8 +350,8 @@
         const defaultData = [
             {
                 'TT': 1, 'Tên cơ sở': 'Nhà trọ Bình Minh', 'Địa chỉ cơ sở': 'Số 15 phố Thành Công', 'TDP': 'TDP số 6', 'Ngành nghề': 'Cho thuê phòng trọ', 'Tổng số phòng trọ': 12, 'Số lượng bình chữa cháy': 6,
-                'Họ và tên chủ cơ sở': 'Nguyễn Văn Bình', 'Năm sinh': '25/07/1980', 'Tuổi': 46, 'Giới tính': 'Nam', 'Dân tộc': 'Kinh', 'Tôn giáo': 'Không',
-                'Quê quán': 'Hà Nội', 'Nơi thường trú': 'Số 15 phố Thành Công, Hà Nội', 'Nơi ở hiện nay': 'Số 15 phố Thành Công, Hà Nội', 'TDP2': 'TDP số 6', 'Số căn cước': '001080012345', 'Số điện thoại': '0912345678',
+                'Họ và tên chủ cơ sở': 'Nguyễn Văn Bình', 'Năm sinh': '15/01/1970', 'Tuổi': 56, 'Giới tính': 'Nam', 'Dân tộc': 'Kinh', 'Tôn giáo': 'Không',
+                'Quê quán': 'Hà Nội', 'Nơi thường trú': 'Số 15 phố Thành Công, Hà Nội', 'Nơi ở hiện nay': 'Số 15 phố Thành Công, Hà Nội', 'TDP2': 'TDP số 6', 'Số căn cước': '001070012345', 'Số điện thoại': '0912345678',
                 'Tọa độ / Link Google Maps': '', 'Số tài khoản': '19031234567890', 'Ngân hàng': 'Techcombank',
                 'Giấy phép kinh doanh số': '01A8001234', 'Ngày cấp GPKD': '15/05/2020', 'Nơi cấp GPKD': 'UBND Quận',
                 'Phòng cháy chữa cháy': 'GCN-PCCC/2023/05', 'Ngày cấp PCCC': '10/06/2023', 'Nơi cấp PCCC': 'CA Quận', 'Ghi chú': 'Hoạt động ổn định',
@@ -365,6 +364,15 @@
                         'Đơn vị xử phạt': 'Công an phường Thành Công'
                     }
                 ]
+            },
+            {
+                'TT': 2, 'Tên cơ sở': 'Nhà nghỉ Hoàng Gia', 'Địa chỉ cơ sở': 'Số 28 phố Thành Công', 'TDP': 'TDP số 7', 'Ngành nghề': 'Nhà nghỉ', 'Tổng số phòng trọ': 20, 'Số lượng bình chữa cháy': 10,
+                'Họ và tên chủ cơ sở': 'Trần Thị Lan', 'Năm sinh': '27/05/1999', 'Tuổi': 27, 'Giới tính': 'Nữ', 'Dân tộc': 'Kinh', 'Tôn giáo': 'Không',
+                'Quê quán': 'Hà Nam', 'Nơi thường trú': 'Số 28 phố Thành Công, Hà Nội', 'Nơi ở hiện nay': 'Số 28 phố Thành Công, Hà Nội', 'TDP2': 'TDP số 7', 'Số căn cước': '034099012345', 'Số điện thoại': '0988777666',
+                'Tọa độ / Link Google Maps': '', 'Số tài khoản': '19039876543210', 'Ngân hàng': 'MB Bank',
+                'Giấy phép kinh doanh số': '01A8005678', 'Ngày cấp GPKD': '20/10/2021', 'Nơi cấp GPKD': 'UBND Quận',
+                'Phòng cháy chữa cháy': 'GCN-PCCC/2024/02', 'Ngày cấp PCCC': '15/01/2024', 'Nơi cấp PCCC': 'CA Quận', 'Ghi chú': 'Chấp hành tốt',
+                'violations': []
             }
         ];
 
@@ -464,7 +472,7 @@
 
         function loadData() {
             try {
-                const stored = localStorage.getItem('quan_ly_coso_data_tdp67');
+                const stored = localStorage.getItem('quan_ly_coso_data_tdp67_v3');
                 if (stored) {
                     objectsData = JSON.parse(stored);
                 } else {
@@ -481,7 +489,7 @@
 
         function saveDataToStorage() {
             try {
-                localStorage.setItem('quan_ly_coso_data_tdp67', JSON.stringify(objectsData));
+                localStorage.setItem('quan_ly_coso_data_tdp67_v3', JSON.stringify(objectsData));
             } catch (err) {}
         }
 
@@ -691,8 +699,8 @@
             const binhcc = getProp(obj, ['Số lượng bình chữa cháy']) || '0';
             
             const chu = getProp(obj, ['Họ và tên chủ cơ sở']) || 'Chưa rõ';
-            const namsinh = '25/07/1980'; // Cố định theo yêu cầu
-            const tuoi = 46; // Tính theo năm 2026
+            const namsinh = getProp(obj, ['Năm sinh', 'Ngày sinh', 'NS']) || 'Chưa rõ';
+            const tuoi = getProp(obj, ['Tuổi']) || '';
             const gioitinh = getProp(obj, ['Giới tính']) || '';
             const dantoc = getProp(obj, ['Dân tộc']) || '';
             const thuongtru = getProp(obj, ['Nơi thường trú']) || '';
@@ -755,7 +763,7 @@
                     <h5 class="font-bold text-blue-800 text-sm border-b pb-1"><i class="fa-solid fa-user-tie"></i> Chủ Cơ Sở / Thành Viên Chủ Chốt</h5>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
                         <div><strong class="text-slate-500">Họ tên:</strong> <span class="font-semibold text-slate-900">${chu}</span></div>
-                        <div><strong class="text-slate-500">Ngày sinh / Tuổi:</strong> ${namsinh} (${tuoi} tuổi)</div>
+                        <div><strong class="text-slate-500">Ngày sinh / Tuổi:</strong> ${namsinh} ${tuoi ? '('+tuoi+' tuổi)' : ''}</div>
                         <div><strong class="text-slate-500">Giới tính:</strong> ${gioitinh}</div>
                         <div><strong class="text-slate-500">Căn cước:</strong> ${cancuoc}</div>
                         <div><strong class="text-slate-500">Số điện thoại:</strong> ${sdtHtml}</div>
@@ -864,8 +872,19 @@
             const parts = qrText.split('|');
             let cccd = parts[0] || '';
             let hoten = parts[2] || '';
+            let ngaysinhRaw = parts[3] || '';
             let gioitinh = parts[4] || '';
             let thuongtru = parts[5] || '';
+            
+            let nsFormatted = '';
+            let tuoi = '';
+            if (ngaysinhRaw.length === 8) {
+                let d = ngaysinhRaw.substring(0, 2);
+                let m = ngaysinhRaw.substring(2, 4);
+                let y = ngaysinhRaw.substring(4, 8);
+                nsFormatted = `${d}/${m}/${y}`;
+                tuoi = new Date().getFullYear() - parseInt(y);
+            }
 
             const formModal = document.getElementById('form-modal');
             if (formModal.classList.contains('hidden')) openAddModal();
@@ -873,8 +892,8 @@
             setTimeout(() => {
                 setFieldVal('Số căn cước', cccd);
                 setFieldVal('Họ và tên chủ cơ sở', hoten);
-                setFieldVal('Năm sinh', '25/07/1980'); // Gán mặc định theo yêu cầu
-                setFieldVal('Tuổi', '46');
+                if (nsFormatted) setFieldVal('Năm sinh', nsFormatted);
+                if (tuoi) setFieldVal('Tuổi', tuoi);
                 setFieldVal('Giới tính', gioitinh);
                 setFieldVal('Nơi thường trú', thuongtru);
                 setFieldVal('Nơi ở hiện nay', thuongtru);
@@ -899,11 +918,12 @@
                         break;
                     }
                 }
-                // Cố định ngày tháng năm sinh chủ cơ sở nếu đúng trường Năm sinh hoặc Tuổi mặc định khi tạo mới
-                if (col === 'Năm sinh' && !val && data['Họ và tên chủ cơ sở'] === undefined) {
+                
+                // Mặc định ngày sinh 25/07/1980 khi thêm mới thủ công trống
+                if (col === 'Năm sinh' && !val && Object.keys(data).length === 0) {
                     val = '25/07/1980';
                 }
-                if (col === 'Tuổi' && !val && data['Họ và tên chủ cơ sở'] === undefined) {
+                if (col === 'Tuổi' && !val && Object.keys(data).length === 0) {
                     val = '46';
                 }
 
@@ -994,12 +1014,6 @@
             let newObj = {};
             columnsSchema.forEach(col => { 
                 let val = formData.get(col) || '';
-                if (col === 'Năm sinh' && !val) {
-                    val = '25/07/1980';
-                }
-                if (col === 'Tuổi' && !val) {
-                    val = '46';
-                }
                 if ((col.toLowerCase().includes('ngày') || col.toLowerCase().includes('ngay')) && val) {
                     val = formatDateString(val);
                 }
@@ -1083,15 +1097,35 @@
                     const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
                     
                     tempImportedData = json.map(item => {
-                        for (let key in item) {
-                            let kLower = key.toLowerCase();
-                            if (kLower.includes('ngày') || kLower.includes('ngay')) {
-                                item[key] = formatDateString(item[key]);
+                        let normalizedItem = {};
+                        columnsSchema.forEach(col => {
+                            let val = '';
+                            for (let key in item) {
+                                if (normalizeText(key) === normalizeText(col)) {
+                                    val = item[key];
+                                    break;
+                                }
                             }
-                            if (kLower.includes('căn cước')) {
-                                item[key] = formatCANCUOC(item[key]);
+                            if (!val && (col === 'Năm sinh')) {
+                                for (let key in item) {
+                                    let kNorm = normalizeText(key);
+                                    if (kNorm.includes('nam sinh') || kNorm.includes('ngay sinh') || kNorm === 'ns' || kNorm === 'dob') {
+                                        val = item[key];
+                                        break;
+                                    }
+                                }
                             }
-                        }
+                            if (!val && item[col] !== undefined) val = item[col];
+
+                            if ((col.toLowerCase().includes('ngày') || col.toLowerCase().includes('ngay') || col === 'Năm sinh') && val) {
+                                normalizedItem[col] = formatDateString(val);
+                            } else if (col.toLowerCase().includes('căn cước')) {
+                                normalizedItem[col] = formatCANCUOC(val);
+                            } else {
+                                normalizedItem[col] = val || '';
+                            }
+                        });
+
                         let violations = [];
                         for (let i = 1; i <= 10; i++) {
                             let prefix = `Vi phạm ${i} - `;
@@ -1106,9 +1140,10 @@
                                 });
                             }
                         }
-                        item['violations'] = violations;
-                        return item;
+                        normalizedItem['violations'] = violations;
+                        return normalizedItem;
                     });
+
                     document.getElementById('import-info-text').innerText = `Đã đọc thành công ${tempImportedData.length} cơ sở từ file Excel. Bạn muốn thực hiện thao tác nào?`;
                     document.getElementById('import-modal').classList.remove('hidden');
                 } catch(err) {
