@@ -1,0 +1,1189 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUẢN LÝ CƠ SỞ ĐỊA BÀN TỔ DÂN PHỐ 6 - 7 THÀNH CÔNG</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS (XLSX) CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <!-- Html5-qrcode CDN cho tính năng quét QR -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .card-shadow { box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- PASSWORD MODAL -->
+    <div id="auth-modal" class="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl max-w-md w-full p-6 shadow-2xl">
+            <div class="text-center mb-6">
+                <div class="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-900">Đăng Nhập Hệ Thống</h2>
+                <p class="text-sm text-slate-500 mt-1">QUẢN LÝ CƠ SỞ ĐỊA BÀN TỔ DÂN PHỐ 6 - 7 THÀNH CÔNG</p>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-slate-700 mb-1">Mật khẩu truy cập</label>
+                <div class="flex gap-2">
+                    <input type="password" id="password-input" value="Dancu@123" placeholder="Nhập mật khẩu..." class="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="button" onclick="autofillAndLogin()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg transition text-sm flex items-center gap-1.5 shrink-0 font-medium">
+                        <i class="fa-solid fa-arrow-right-to-bracket"></i> Vào ngay
+                    </button>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Mật khẩu mặc định: <span class="font-semibold text-blue-600">Dancu@123</span></p>
+            </div>
+            <div id="auth-error" class="text-red-500 text-sm mb-4 hidden">Mật khẩu không chính xác. Vui lòng thử lại.</div>
+            <button type="button" onclick="autofillAndLogin()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition duration-200">
+                Truy Cập Hệ Thống
+            </button>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app-container" class="hidden flex-1 flex flex-col">
+        <!-- HEADER -->
+        <header class="bg-blue-800 text-white shadow-lg sticky top-0 z-40">
+            <div class="max-w-7xl mx-auto px-4 py-3 flex flex-wrap justify-between items-center gap-3">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-blue-700 p-2 rounded-lg">
+                        <i class="fa-solid fa-building-shield text-xl"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm md:text-base font-bold tracking-wide">QUẢN LÝ CƠ SỞ ĐỊA BÀN TỔ DÂN PHỐ 6 - 7 THÀNH CÔNG</h1>
+                        <p class="text-xs text-blue-200">Trung tá Đoàn Minh Trung, SĐT: 0946737878</p>
+                    </div>
+                </div>
+
+                <!-- TOP ACTIONS / BUTTONS -->
+                <div class="flex flex-wrap items-center gap-2">
+                    <div id="live-clock" class="text-xs bg-blue-900/80 px-3 py-1.5 rounded-lg border border-blue-700 font-medium hidden sm:block"></div>
+                    <button onclick="openAddModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-plus-circle"></i> <span class="hidden sm:inline">Thêm cơ sở</span>
+                    </button>
+                    <button onclick="openQRScanModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-qrcode"></i> <span class="hidden sm:inline">Quét QR CCCD</span>
+                    </button>
+                    <div class="relative inline-block text-left">
+                        <button onclick="toggleMenu()" class="bg-blue-700 hover:bg-blue-600 text-white text-sm px-3 py-2 rounded-lg font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-bars"></i> Menu <i class="fa-solid fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="dropdown-menu" class="hidden absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-slate-200 z-50 py-1 text-slate-700">
+                            <button onclick="openQRScanModal()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-qrcode text-purple-600 w-5"></i> Quét QR CCCD</button>
+                            <button onclick="triggerImportExcel()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-file-excel text-emerald-600 w-5"></i> Nhập Excel</button>
+                            <button onclick="exportExcel()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-file-arrow-down text-blue-600 w-5"></i> Xuất Excel</button>
+                            <button onclick="backupJSON()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-database text-purple-600 w-5"></i> Sao lưu JSON</button>
+                            <button onclick="triggerRestoreJSON()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-rotate-left text-amber-600 w-5"></i> Khôi phục JSON</button>
+                            <button onclick="openChangePasswordModal()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-slate-100 flex items-center gap-2"><i class="fa-solid fa-key text-blue-600 w-5"></i> Đổi mật khẩu</button>
+                            <div class="border-t border-slate-100 my-1"></div>
+                            <button onclick="confirmClearAll()" class="w-full text-left px-4 py-2.5 text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"><i class="fa-solid fa-trash-can w-5"></i> Xóa toàn bộ dữ liệu</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- HIDDEN FILE INPUTS -->
+        <input type="file" id="excel-file-input" accept=".xlsx, .xls" class="hidden" onchange="handleExcelImport(event)">
+        <input type="file" id="json-file-input" accept=".json" class="hidden" onchange="handleJSONRestore(event)">
+
+        <!-- MAIN CONTENT AREA -->
+        <main class="max-w-7xl mx-auto px-4 py-6 w-full flex-1">
+            <!-- STATISTICS & SEARCH BAR -->
+            <div class="bg-white rounded-2xl p-4 md:p-6 card-shadow mb-6">
+                <!-- THỐNG KÊ CHI TIẾT NGÀNH NGHỀ & CHỈ SỐ -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 mb-6" id="stat-container">
+                    <div class="bg-blue-50 p-3 rounded-xl border border-blue-100 text-center">
+                        <div class="text-[11px] text-blue-600 font-semibold uppercase">Tổng số cơ sở</div>
+                        <div id="stat-total" class="text-xl font-bold text-blue-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-purple-50 p-3 rounded-xl border border-purple-100 text-center">
+                        <div class="text-[11px] text-purple-600 font-semibold uppercase">Cho thuê phòng trọ</div>
+                        <div id="stat-phongtro" class="text-xl font-bold text-purple-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100 text-center">
+                        <div class="text-[11px] text-emerald-600 font-semibold uppercase">Nhà nghỉ / Lưu trú</div>
+                        <div id="stat-nhanghi" class="text-xl font-bold text-emerald-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-amber-50 p-3 rounded-xl border border-amber-100 text-center">
+                        <div class="text-[11px] text-amber-600 font-semibold uppercase">Ăn uống / Quán ăn</div>
+                        <div id="stat-anuong" class="text-xl font-bold text-amber-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-indigo-50 p-3 rounded-xl border border-indigo-100 text-center">
+                        <div class="text-[11px] text-indigo-600 font-semibold uppercase">Dịch vụ khác</div>
+                        <div id="stat-khac" class="text-xl font-bold text-indigo-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-cyan-50 p-3 rounded-xl border border-cyan-100 text-center">
+                        <div class="text-[11px] text-cyan-600 font-semibold uppercase">Có GPKD</div>
+                        <div id="stat-gpkd" class="text-xl font-bold text-cyan-800 mt-1">0</div>
+                    </div>
+                    <div class="bg-rose-50 p-3 rounded-xl border border-rose-100 text-center">
+                        <div class="text-[11px] text-rose-600 font-semibold uppercase">Có vi phạm</div>
+                        <div id="stat-vipham" class="text-xl font-bold text-rose-800 mt-1">0</div>
+                    </div>
+                </div>
+
+                <!-- SEARCH INPUT -->
+                <div class="relative">
+                    <span class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                        <i class="fa-solid fa-magnifying-glass text-lg"></i>
+                    </span>
+                    <input type="text" id="search-input" oninput="handleSearch()" placeholder="Tìm kiếm theo Tên cơ sở, Địa chỉ, Chủ cơ sở, Căn cước, SĐT, Ngành nghề, Lỗi vi phạm..." class="w-full pl-12 pr-10 py-3.5 bg-slate-50 border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:bg-white focus:outline-none text-sm md:text-base">
+                    <button id="clear-search" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-4 flex items-center text-slate-400 hover:text-slate-600">
+                        <i class="fa-solid fa-xmark text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- OBJECT LIST VIEW -->
+            <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+                <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-slate-50">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-list-check text-blue-600"></i> Danh Sách Cơ Sở Địa Bàn TDP 6 - 7 Thành Công
+                    </h3>
+                    <span id="list-count-badge" class="text-xs bg-blue-100 text-blue-800 font-semibold px-2.5 py-1 rounded-full">0 cơ sở</span>
+                </div>
+
+                <!-- DESKTOP TABLE VIEW -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-100 text-slate-700 text-xs uppercase font-semibold border-b border-slate-200">
+                                <th class="py-3 px-3 text-center">STT</th>
+                                <th class="py-3 px-4">Tên cơ sở</th>
+                                <th class="py-3 px-4">Địa chỉ cơ sở / TDP</th>
+                                <th class="py-3 px-4">Ngành nghề</th>
+                                <th class="py-3 px-4">Chủ cơ sở</th>
+                                <th class="py-3 px-4">Số điện thoại</th>
+                                <th class="py-3 px-4 text-center">Bình CC</th>
+                                <th class="py-3 px-4">Bản đồ</th>
+                                <th class="py-3 px-4 text-center">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="desktop-table-body" class="divide-y divide-slate-200 text-sm"></tbody>
+                    </table>
+                </div>
+
+                <!-- MOBILE CARD VIEW -->
+                <div class="md:hidden divide-y divide-slate-200" id="mobile-card-list"></div>
+
+                <!-- EMPTY STATE -->
+                <div id="empty-state" class="hidden py-16 text-center">
+                    <div class="text-slate-300 text-5xl mb-3"><i class="fa-solid fa-folder-open"></i></div>
+                    <p class="text-slate-500 font-medium">Không tìm thấy cơ sở nào</p>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- BACK TO TOP BUTTON -->
+    <button id="back-to-top" onclick="scrollToTop()" class="hidden fixed bottom-6 right-6 bg-blue-600 hover:bg-blue-700 text-white w-12 h-12 rounded-full shadow-xl flex items-center justify-center text-lg z-40 transition-all duration-300">
+        <i class="fa-solid fa-arrow-up"></i>
+    </button>
+
+    <!-- DETAIL MODAL -->
+    <div id="detail-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2 md:p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+            <div class="bg-blue-800 text-white px-6 py-4 flex justify-between items-center">
+                <h3 class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-building-circle-check"></i> Chi Tiết Cơ Sở</h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="copyCurrentDetailText()" class="bg-blue-700 hover:bg-blue-600 text-white text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition"><i class="fa-regular fa-copy"></i> Sao chép TT</button>
+                    <button onclick="closeDetailModal()" class="text-blue-200 hover:text-white text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <div id="detail-content" class="p-4 md:p-6 overflow-y-auto flex-1 space-y-5 bg-slate-50"></div>
+            <div class="bg-white border-t border-slate-200 px-6 py-3 flex justify-end gap-3">
+                <button onclick="editCurrentDetail()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg font-medium flex items-center gap-1.5 transition"><i class="fa-solid fa-pen-to-square"></i> Chỉnh sửa</button>
+                <button onclick="closeDetailModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm px-4 py-2 rounded-lg font-medium transition">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD/EDIT FORM MODAL -->
+    <div id="form-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-2 md:p-4 overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+            <div class="bg-blue-800 text-white px-6 py-4 flex justify-between items-center">
+                <h3 id="form-modal-title" class="text-lg font-bold flex items-center gap-2"><i class="fa-solid fa-plus-circle"></i> Thêm Cơ Sở Mới</h3>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="openQRScanModal()" class="bg-purple-600 hover:bg-purple-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+                        <i class="fa-solid fa-qrcode"></i> Quét QR chủ cơ sở
+                    </button>
+                    <button onclick="closeFormModal()" class="text-blue-200 hover:text-white text-xl p-1"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+            </div>
+            <form id="object-form" onsubmit="saveObjectForm(event)" class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 bg-slate-50">
+                <input type="hidden" id="edit-index" value="-1">
+                
+                <div id="form-fields-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4"></div>
+
+                <!-- SECTION: LỊCH SỬ VI PHẠM (NHIỀU LẦN) -->
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-4">
+                    <div class="flex justify-between items-center border-b pb-2">
+                        <h4 class="font-bold text-blue-800 text-sm flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Vi Phạm</h4>
+                        <button type="button" onclick="addViolationRow()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-3 py-1.5 rounded-lg font-medium flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-plus"></i> Thêm lần vi phạm
+                        </button>
+                    </div>
+                    <div id="violations-container" class="space-y-4"></div>
+                </div>
+
+                <div class="flex justify-end gap-3 pt-4 border-t border-slate-200">
+                    <button type="button" onclick="closeFormModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-5 py-2.5 rounded-xl font-medium transition">Hủy bỏ</button>
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-medium transition flex items-center gap-2"><i class="fa-solid fa-floppy-disk"></i> Lưu dữ liệu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- QR CODE SCANNING MODAL -->
+    <div id="qr-modal" class="fixed inset-0 bg-black/85 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl flex flex-col items-center">
+            <div class="w-full flex justify-between items-center mb-4">
+                <h3 class="text-lg font-bold text-slate-900 flex items-center gap-2"><i class="fa-solid fa-qrcode text-purple-600"></i> Quét Mã QR Căn Cước Chủ Cơ Sở</h3>
+                <button onclick="closeQRScanModal()" class="text-slate-400 hover:text-slate-700 text-xl"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div id="qr-reader" class="w-full rounded-xl overflow-hidden bg-slate-900 aspect-square flex items-center justify-center"></div>
+            
+            <div class="w-full mt-4 space-y-2">
+                <div class="text-center text-xs text-slate-500">Hướng camera về mã QR trên thẻ CCCD gắn chip để tự động điền thông tin chủ cơ sở.</div>
+                <label class="w-full bg-purple-600 hover:bg-purple-700 text-white font-medium py-2.5 px-4 rounded-xl text-center cursor-pointer block transition text-sm">
+                    <i class="fa-solid fa-image"></i> Tải ảnh chứa mã QR lên
+                    <input type="file" accept="image/*" class="hidden" onchange="scanQRFromFile(event)">
+                </label>
+                <button type="button" onclick="closeQRScanModal()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition text-sm">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CHANGE PASSWORD MODAL -->
+    <div id="change-password-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="text-center mb-5">
+                <div class="bg-blue-100 text-blue-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl">
+                    <i class="fa-solid fa-key"></i>
+                </div>
+                <h3 class="text-xl font-bold text-slate-900">Đổi Mật Khẩu Hệ Thống</h3>
+                <p class="text-sm text-slate-500 mt-1">Cập nhật mật khẩu bảo mật cho tài khoản truy cập</p>
+            </div>
+            <form onsubmit="submitChangePassword(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu hiện tại</label>
+                    <input type="password" id="old-password" required placeholder="Nhập mật khẩu cũ..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Mật khẩu mới</label>
+                    <input type="password" id="new-password" required placeholder="Nhập mật khẩu mới..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Xác nhận mật khẩu mới</label>
+                    <input type="password" id="confirm-password" required placeholder="Nhập lại mật khẩu mới..." class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                </div>
+                <div id="change-pwd-error" class="text-red-500 text-xs hidden"></div>
+                <div class="flex gap-3 pt-2">
+                    <button type="button" onclick="closeChangePasswordModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 py-2.5 rounded-xl font-medium transition">Hủy bỏ</button>
+                    <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl font-medium transition">Xác nhận đổi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- EXCEL IMPORT CONFIRM MODAL -->
+    <div id="import-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="text-center mb-5">
+                <div class="bg-emerald-100 text-emerald-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i class="fa-solid fa-file-excel"></i></div>
+                <h3 class="text-xl font-bold text-slate-900">Xác Nhận Nhập Excel</h3>
+                <p id="import-info-text" class="text-sm text-slate-600 mt-2">Đã đọc thành công file Excel.</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="processExcelImport('override')" class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-2.5 rounded-xl transition">Ghi đè toàn bộ dữ liệu</button>
+                <button onclick="processExcelImport('append')" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-xl transition">Thêm tiếp vào dữ liệu</button>
+                <button onclick="closeImportModal()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition">Hủy bỏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRM DELETE ALL MODAL -->
+    <div id="clear-all-modal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl">
+            <div class="text-center mb-5">
+                <div class="bg-red-100 text-red-600 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-3 text-2xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <h3 class="text-xl font-bold text-slate-900">CẢNH BÁO XÓA TOÀN BỘ</h3>
+                <p class="text-sm text-slate-600 mt-2">Bạn có chắc chắn muốn xóa toàn bộ dữ liệu cơ sở không?</p>
+            </div>
+            <div class="space-y-3">
+                <button onclick="proceedClearAll()" class="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2.5 rounded-xl transition">Xác nhận xóa</button>
+                <button onclick="closeClearAllModal()" class="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium py-2.5 rounded-xl transition">Hủy bỏ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" class="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-5 py-3 rounded-xl shadow-2xl z-50 hidden text-sm font-medium flex items-center gap-2">
+        <i id="toast-icon" class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toast-message">Thành công!</span>
+    </div>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        // Cấu hình các trường thông tin chuẩn theo yêu cầu mới (đã bỏ hình thức sở hữu, thêm số lượng bình chữa cháy, năm sinh cố định chủ cơ sở)
+        const columnsSchema = [
+            'Tên cơ sở', 'Địa chỉ cơ sở', 'TDP', 'Ngành nghề', 'Tổng số phòng trọ', 'Số lượng bình chữa cháy',
+            'Họ và tên chủ cơ sở', 'Năm sinh', 'Tuổi', 'Giới tính', 'Dân tộc', 'Tôn giáo', 
+            'Quê quán', 'Nơi thường trú', 'Nơi ở hiện nay', 'TDP2', 'Số căn cước', 'Số điện thoại',
+            'Tọa độ / Link Google Maps', 'Số tài khoản', 'Ngân hàng', 
+            'Giấy phép kinh doanh số', 'Ngày cấp GPKD', 'Nơi cấp GPKD', 
+            'Phòng cháy chữa cháy', 'Ngày cấp PCCC', 'Nơi cấp PCCC', 'Ghi chú'
+        ];
+
+        const defaultData = [
+            {
+                'TT': 1, 'Tên cơ sở': 'Nhà trọ Bình Minh', 'Địa chỉ cơ sở': 'Số 15 phố Thành Công', 'TDP': 'TDP số 6', 'Ngành nghề': 'Cho thuê phòng trọ', 'Tổng số phòng trọ': 12, 'Số lượng bình chữa cháy': 6,
+                'Họ và tên chủ cơ sở': 'Nguyễn Văn Bình', 'Năm sinh': '25/07/1980', 'Tuổi': 46, 'Giới tính': 'Nam', 'Dân tộc': 'Kinh', 'Tôn giáo': 'Không',
+                'Quê quán': 'Hà Nội', 'Nơi thường trú': 'Số 15 phố Thành Công, Hà Nội', 'Nơi ở hiện nay': 'Số 15 phố Thành Công, Hà Nội', 'TDP2': 'TDP số 6', 'Số căn cước': '001080012345', 'Số điện thoại': '0912345678',
+                'Tọa độ / Link Google Maps': '', 'Số tài khoản': '19031234567890', 'Ngân hàng': 'Techcombank',
+                'Giấy phép kinh doanh số': '01A8001234', 'Ngày cấp GPKD': '15/05/2020', 'Nơi cấp GPKD': 'UBND Quận',
+                'Phòng cháy chữa cháy': 'GCN-PCCC/2023/05', 'Ngày cấp PCCC': '10/06/2023', 'Nơi cấp PCCC': 'CA Quận', 'Ghi chú': 'Hoạt động ổn định',
+                'violations': [
+                    {
+                        'Ngày tháng vi phạm': '12/08/2024',
+                        'Lỗi vi phạm': 'Không niêm yết nội quy phòng cháy chữa cháy tại khu vực chung',
+                        'Hình thức xử phạt': 'Phạt tiền cảnh cáo và yêu cầu khắc phục',
+                        'Mức phạt': '1.500.000 VNĐ',
+                        'Đơn vị xử phạt': 'Công an phường Thành Công'
+                    }
+                ]
+            }
+        ];
+
+        let objectsData = [];
+        let filteredData = [];
+        let currentDetailIndex = -1;
+        let tempImportedData = [];
+        let html5QrCode = null;
+
+        function getSystemPassword() {
+            return localStorage.getItem('system_password') || 'Dancu@123';
+        }
+
+        window.onload = function() {
+            startLiveClock();
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                document.getElementById('auth-modal').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                loadData();
+            }
+        };
+
+        function startLiveClock() {
+            function updateClock() {
+                const now = new Date();
+                const days = ['Chủ Nhật', 'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm', 'Thứ Sáu', 'Thứ Bảy'];
+                const dayName = days[now.getDay()];
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                const date = String(now.getDate()).padStart(2, '0');
+                const month = String(now.getMonth() + 1).padStart(2, '0');
+                const year = now.getFullYear();
+                
+                const clockEl = document.getElementById('live-clock');
+                if (clockEl) {
+                    clockEl.innerHTML = `<i class="fa-regular fa-clock text-blue-300"></i> ${dayName}, ${date}/${month}/${year} - ${hours}:${minutes}:${seconds}`;
+                }
+            }
+            updateClock();
+            setInterval(updateClock, 1000);
+        }
+
+        function autofillAndLogin() {
+            const pwd = document.getElementById('password-input').value;
+            if (pwd === getSystemPassword()) {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('auth-modal').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                loadData();
+                showToast('Đăng nhập thành công!', 'success');
+            } else {
+                document.getElementById('auth-error').classList.remove('hidden');
+            }
+        }
+
+        function openChangePasswordModal() {
+            toggleMenu();
+            document.getElementById('old-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+            document.getElementById('change-pwd-error').classList.add('hidden');
+            document.getElementById('change-password-modal').classList.remove('hidden');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('change-password-modal').classList.add('hidden');
+        }
+
+        function submitChangePassword(e) {
+            e.preventDefault();
+            const oldPwd = document.getElementById('old-password').value;
+            const newPwd = document.getElementById('new-password').value;
+            const confirmPwd = document.getElementById('confirm-password').value;
+            const errorDiv = document.getElementById('change-pwd-error');
+
+            if (oldPwd !== getSystemPassword()) {
+                errorDiv.innerText = 'Mật khẩu hiện tại không chính xác.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            if (newPwd.length < 6) {
+                errorDiv.innerText = 'Mật khẩu mới phải có ít nhất 6 ký tự.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                errorDiv.innerText = 'Xác nhận mật khẩu mới không khớp.';
+                errorDiv.classList.remove('hidden');
+                return;
+            }
+
+            localStorage.setItem('system_password', newPwd);
+            closeChangePasswordModal();
+            showToast('Đổi mật khẩu thành công!', 'success');
+        }
+
+        function loadData() {
+            try {
+                const stored = localStorage.getItem('quan_ly_coso_data_tdp67');
+                if (stored) {
+                    objectsData = JSON.parse(stored);
+                } else {
+                    objectsData = defaultData;
+                    saveDataToStorage();
+                }
+            } catch (err) {
+                objectsData = defaultData;
+            }
+            filteredData = [...objectsData];
+            renderObjects();
+            updateStatistics();
+        }
+
+        function saveDataToStorage() {
+            try {
+                localStorage.setItem('quan_ly_coso_data_tdp67', JSON.stringify(objectsData));
+            } catch (err) {}
+        }
+
+        function normalizeText(str) {
+            if (!str) return '';
+            return str.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D');
+        }
+
+        function formatDateString(val) {
+            if (!val && val !== 0) return '';
+            if (typeof val === 'number') {
+                const date = new Date(Math.round((val - (25567 + 2)) * 86400 * 1000));
+                const day = String(date.getDate()).padStart(2, '0');
+                const month = String(date.getMonth() + 1).padStart(2, '0');
+                const year = date.getFullYear();
+                if (!isNaN(year)) return `${day}/${month}/${year}`;
+            }
+            let str = val.toString().trim();
+            if (!str) return '';
+            if (/^\d{4}[-/]\d{1,2}[-/]\d{1,2}$/.test(str)) {
+                let parts = str.split(/[-/]/);
+                return `${parts[2].padStart(2, '0')}/${parts[1].padStart(2, '0')}/${parts[0]}`;
+            }
+            return str;
+        }
+
+        function formatCANCUOC(val) {
+            if (!val && val !== 0) return '';
+            let str = val.toString().trim();
+            if (/^\d{11}$/.test(str)) return '0' + str;
+            return str;
+        }
+
+        function getProp(obj, keyList) {
+            if (!obj) return '';
+            for (let k of keyList) {
+                for (let key in obj) {
+                    if (key.trim().toLowerCase() === k.trim().toLowerCase()) {
+                        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') return obj[key];
+                    }
+                }
+            }
+            for (let k of keyList) {
+                for (let key in obj) {
+                    if (key.trim().toLowerCase().includes(k.trim().toLowerCase())) {
+                        if (obj[key] !== undefined && obj[key] !== null && obj[key] !== '') return obj[key];
+                    }
+                }
+            }
+            return '';
+        }
+
+        function getGoogleMapLink(obj) {
+            let existing = getProp(obj, ['Tọa độ / Link Google Maps', 'Google Maps', 'Bản đồ']);
+            if (existing && existing.startsWith('http')) return existing;
+            const tencoso = getProp(obj, ['Tên cơ sở']) || '';
+            const diachi = getProp(obj, ['Địa chỉ cơ sở']) || '';
+            const query = encodeURIComponent(`${tencoso} ${diachi} Thành Công Ba Đình Hà Nội`);
+            return `https://maps.google.com/?q=${query}`;
+        }
+
+        function renderObjects() {
+            const tbody = document.getElementById('desktop-table-body');
+            const cardList = document.getElementById('mobile-card-list');
+            const emptyState = document.getElementById('empty-state');
+            tbody.innerHTML = '';
+            cardList.innerHTML = '';
+
+            if (filteredData.length === 0) {
+                emptyState.classList.remove('hidden');
+                document.getElementById('list-count-badge').innerText = '0 cơ sở';
+                return;
+            }
+            emptyState.classList.add('hidden');
+            document.getElementById('list-count-badge').innerText = `${filteredData.length} cơ sở`;
+
+            filteredData.forEach((obj, idx) => {
+                const originalIndex = objectsData.indexOf(obj);
+                const tencoso = getProp(obj, ['Tên cơ sở']) || 'Chưa cập nhật';
+                const diachi = getProp(obj, ['Địa chỉ cơ sở']) || 'Chưa cập nhật';
+                const tdp = getProp(obj, ['TDP']) ? `(${getProp(obj, ['TDP'])})` : '';
+                const nganhnghe = getProp(obj, ['Ngành nghề']) || 'Chưa cập nhật';
+                const chủ = getProp(obj, ['Họ và tên chủ cơ sở']) || 'Chưa rõ';
+                const sdt = getProp(obj, ['Số điện thoại']) || '';
+                const binhcc = getProp(obj, ['Số lượng bình chữa cháy']) || '0';
+                const mapLink = getGoogleMapLink(obj);
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-50 transition border-b border-slate-100 cursor-pointer';
+                tr.onclick = () => showDetail(originalIndex);
+                
+                const phoneHtml = sdt 
+                    ? `<a href="tel:${sdt}" onclick="event.stopPropagation()" class="text-blue-600 font-bold hover:underline flex items-center gap-1.5"><i class="fa-solid fa-phone-volume text-xs"></i> ${sdt}</a>`
+                    : '<span class="text-slate-400">Trống</span>';
+
+                const mapHtml = `<a href="${mapLink}" target="_blank" onclick="event.stopPropagation()" class="text-purple-600 hover:text-purple-800 font-semibold flex items-center gap-1"><i class="fa-solid fa-map-location-dot"></i> Bản đồ</a>`;
+
+                tr.innerHTML = `
+                    <td class="py-3 px-3 text-center font-medium text-slate-500">${originalIndex + 1}</td>
+                    <td class="py-3 px-4 font-bold text-blue-900">${tencoso}</td>
+                    <td class="py-3 px-4 text-slate-600">${diachi} <span class="text-xs text-blue-600 font-semibold">${tdp}</span></td>
+                    <td class="py-3 px-4 text-slate-700">${nganhnghe}</td>
+                    <td class="py-3 px-4 font-semibold text-slate-800">${chủ}</td>
+                    <td class="py-3 px-4">${phoneHtml}</td>
+                    <td class="py-3 px-4 text-center"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded-full font-bold text-xs"><i class="fa-solid fa-fire-extinguisher"></i> ${binhcc}</span></td>
+                    <td class="py-3 px-4">${mapHtml}</td>
+                    <td class="py-3 px-4 text-center" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-center gap-1.5">
+                            <button onclick="showDetail(${originalIndex})" class="p-1.5 bg-blue-50 text-blue-600 hover:bg-blue-100 rounded-lg" title="Xem chi tiết"><i class="fa-solid fa-eye"></i></button>
+                            <button onclick="openEditModal(${originalIndex})" class="p-1.5 bg-amber-50 text-amber-600 hover:bg-amber-100 rounded-lg" title="Chỉnh sửa"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteObject(${originalIndex})" class="p-1.5 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg" title="Xóa"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+
+                // Mobile Card
+                const cardDiv = document.createElement('div');
+                cardDiv.className = 'p-4 hover:bg-slate-50 cursor-pointer space-y-2';
+                cardDiv.onclick = () => showDetail(originalIndex);
+                cardDiv.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h4 class="font-bold text-slate-900 text-base">${tencoso}</h4>
+                        <span class="text-xs bg-blue-100 text-blue-800 px-2.5 py-1 rounded-full font-semibold">${nganhnghe}</span>
+                    </div>
+                    <p class="text-xs text-slate-600"><i class="fa-solid fa-location-dot text-slate-400"></i> ${diachi} ${tdp}</p>
+                    <div class="flex flex-wrap justify-between items-center text-xs pt-1 border-t border-slate-100">
+                        <span>Chủ: <strong>${chủ}</strong> | SĐT: ${phoneHtml}</span>
+                        <span class="text-red-700 font-bold"><i class="fa-solid fa-fire-extinguisher"></i> ${binhcc} bình CC</span>
+                        <a href="${mapLink}" target="_blank" onclick="event.stopPropagation()" class="text-purple-600 font-semibold"><i class="fa-solid fa-map-location-dot"></i> Bản đồ</a>
+                    </div>
+                `;
+                cardList.appendChild(cardDiv);
+            });
+        }
+
+        function updateStatistics() {
+            document.getElementById('stat-total').innerText = objectsData.length;
+            let phongtro = 0, nhanghi = 0, anuong = 0, khac = 0, gpkd = 0, vipham = 0;
+
+            objectsData.forEach(o => {
+                const nn = normalizeText(getProp(o, ['Ngành nghề']));
+                if (nn.includes('phong tro') || nn.includes('luu tru') || nn.includes('tro')) {
+                    phongtro++;
+                } else if (nn.includes('nha nghi') || nn.includes('khach san') || nn.includes('hotel')) {
+                    nhanghi++;
+                } else if (nn.includes('an uong') || nn.includes('quan an') || nn.includes('cafe') || nn.includes('nha hang') || nn.includes('tap hoa')) {
+                    anuong++;
+                } else {
+                    khac++;
+                }
+
+                if (getProp(o, ['Giấy phép kinh doanh số'])) gpkd++;
+                if (o['violations'] && o['violations'].length > 0) vipham++;
+            });
+
+            document.getElementById('stat-phongtro').innerText = phongtro;
+            document.getElementById('stat-nhanghi').innerText = nhanghi;
+            document.getElementById('stat-anuong').innerText = anuong;
+            document.getElementById('stat-khac').innerText = khac;
+            document.getElementById('stat-gpkd').innerText = gpkd;
+            document.getElementById('stat-vipham').innerText = vipham;
+        }
+
+        function handleSearch() {
+            const query = normalizeText(document.getElementById('search-input').value);
+            if (!query) {
+                filteredData = [...objectsData];
+            } else {
+                filteredData = objectsData.filter(obj => {
+                    for (let key in obj) {
+                        if (key !== 'violations' && obj[key] && normalizeText(obj[key]).includes(query)) return true;
+                    }
+                    if (obj['violations'] && Array.isArray(obj['violations'])) {
+                        for (let v of obj['violations']) {
+                            for (let vk in v) {
+                                if (v[vk] && normalizeText(v[vk]).includes(query)) return true;
+                            }
+                        }
+                    }
+                    return false;
+                });
+            }
+            renderObjects();
+        }
+
+        function clearSearch() {
+            document.getElementById('search-input').value = '';
+            filteredData = [...objectsData];
+            renderObjects();
+        }
+
+        function toggleMenu() {
+            document.getElementById('dropdown-menu').classList.toggle('hidden');
+        }
+
+        function showDetail(index) {
+            currentDetailIndex = index;
+            const obj = objectsData[index];
+            const detailContainer = document.getElementById('detail-content');
+            
+            const tencoso = getProp(obj, ['Tên cơ sở']) || 'Chưa cập nhật';
+            const diachi = getProp(obj, ['Địa chỉ cơ sở']) || '';
+            const tdp = getProp(obj, ['TDP']) || '';
+            const nganhnghe = getProp(obj, ['Ngành nghề']) || '';
+            const sophongtro = getProp(obj, ['Tổng số phòng trọ']) || '0';
+            const binhcc = getProp(obj, ['Số lượng bình chữa cháy']) || '0';
+            
+            const chu = getProp(obj, ['Họ và tên chủ cơ sở']) || 'Chưa rõ';
+            const namsinh = '25/07/1980'; // Cố định theo yêu cầu
+            const tuoi = 46; // Tính theo năm 2026
+            const gioitinh = getProp(obj, ['Giới tính']) || '';
+            const dantoc = getProp(obj, ['Dân tộc']) || '';
+            const thuongtru = getProp(obj, ['Nơi thường trú']) || '';
+            const noio = getProp(obj, ['Nơi ở hiện nay']) || '';
+            const cancuoc = formatCANCUOC(getProp(obj, ['Số căn cước'])) || '';
+            const sdt = getProp(obj, ['Số điện thoại']) || '';
+            const sdtHtml = sdt ? `<a href="tel:${sdt}" class="text-blue-600 font-bold hover:underline"><i class="fa-solid fa-phone-volume"></i> ${sdt}</a>` : 'Trống';
+            
+            const mapLink = getGoogleMapLink(obj);
+            const mapHtml = `<a href="${mapLink}" target="_blank" class="text-purple-600 hover:underline font-bold"><i class="fa-solid fa-map-location-dot"></i> Mở bản đồ Google Maps</a>`;
+
+            const stk = getProp(obj, ['Số tài khoản']) || '';
+            const nganhang = getProp(obj, ['Ngân hàng']) || '';
+
+            const gpkd = getProp(obj, ['Giấy phép kinh doanh số']) || 'Không';
+            const ngaygpkd = formatDateString(getProp(obj, ['Ngày cấp GPKD'])) || '';
+            const noigpkd = getProp(obj, ['Nơi cấp GPKD']) || '';
+
+            const pccc = getProp(obj, ['Phòng cháy chữa cháy']) || 'Không';
+            const ngaypccc = formatDateString(getProp(obj, ['Ngày cấp PCCC'])) || '';
+            const noipccc = getProp(obj, ['Nơi cấp PCCC']) || '';
+            const ghichu = getProp(obj, ['Ghi chú']) || 'Không';
+
+            // Violations
+            let violationsHtml = '';
+            const violations = obj['violations'] || [];
+            if (violations.length === 0) {
+                violationsHtml = '<p class="text-slate-400 text-sm italic">Chưa có lịch sử vi phạm nào.</p>';
+            } else {
+                violations.forEach((v, vIdx) => {
+                    violationsHtml += `
+                        <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1.5 relative">
+                            <div class="absolute top-3 right-3 bg-red-100 text-red-800 text-xs font-bold px-2.5 py-0.5 rounded-full">Lần #${vIdx + 1}</div>
+                            <h6 class="font-bold text-slate-800 text-sm"><i class="fa-solid fa-triangle-exclamation text-amber-600"></i> Vi phạm ngày: <span class="text-blue-700">${formatDateString(v['Ngày tháng vi phạm']) || 'Trống'}</span></h6>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+                                <div class="sm:col-span-2"><strong class="text-slate-500">Lỗi vi phạm:</strong> <span class="text-slate-800 font-medium">${v['Lỗi vi phạm'] || 'Trống'}</span></div>
+                                <div><strong class="text-slate-500">Hình thức xử phạt:</strong> ${v['Hình thức xử phạt'] || 'Trống'}</div>
+                                <div><strong class="text-slate-500">Mức phạt:</strong> <span class="text-rose-600 font-bold">${v['Mức phạt'] || 'Trống'}</span></div>
+                                <div class="sm:col-span-2"><strong class="text-slate-500">Đơn vị xử phạt:</strong> ${v['Đơn vị xử phạt'] || 'Trống'}</div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            detailContainer.innerHTML = `
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                    <span class="text-xs uppercase bg-blue-100 text-blue-800 font-bold px-2.5 py-1 rounded-full">Thông tin cơ sở</span>
+                    <h4 class="text-xl font-bold text-blue-900 mt-1">${tencoso}</h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm pt-2">
+                        <div><strong class="text-slate-500">Địa chỉ:</strong> ${diachi} (${tdp})</div>
+                        <div><strong class="text-slate-500">Ngành nghề:</strong> ${nganhnghe}</div>
+                        <div><strong class="text-slate-500">Số phòng trọ:</strong> ${sophongtro}</div>
+                        <div><strong class="text-slate-500">Bình chữa cháy trang bị:</strong> <span class="text-red-700 font-bold">${binhcc} bình</span></div>
+                        <div class="sm:col-span-2"><strong class="text-slate-500">Vị trí bản đồ:</strong> ${mapHtml}</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                    <h5 class="font-bold text-blue-800 text-sm border-b pb-1"><i class="fa-solid fa-user-tie"></i> Chủ Cơ Sở / Thành Viên Chủ Chốt</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 text-sm">
+                        <div><strong class="text-slate-500">Họ tên:</strong> <span class="font-semibold text-slate-900">${chu}</span></div>
+                        <div><strong class="text-slate-500">Ngày sinh / Tuổi:</strong> ${namsinh} (${tuoi} tuổi)</div>
+                        <div><strong class="text-slate-500">Giới tính:</strong> ${gioitinh}</div>
+                        <div><strong class="text-slate-500">Căn cước:</strong> ${cancuoc}</div>
+                        <div><strong class="text-slate-500">Số điện thoại:</strong> ${sdtHtml}</div>
+                        <div><strong class="text-slate-500">Dân tộc:</strong> ${dantoc}</div>
+                        <div class="sm:col-span-2"><strong class="text-slate-500">Thường trú:</strong> ${thuongtru}</div>
+                        <div class="sm:col-span-2"><strong class="text-slate-500">Nơi ở hiện nay:</strong> ${noio}</div>
+                        <div><strong class="text-slate-500">Tài khoản ngân hàng:</strong> ${stk ? stk + ' (' + nganhang + ')' : 'Trống'}</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-2">
+                    <h5 class="font-bold text-blue-800 text-sm border-b pb-1"><i class="fa-solid fa-file-contract"></i> Pháp Lý & Giấy Phép</h5>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
+                        <div><strong class="text-slate-500">Giấy phép kinh doanh:</strong> ${gpkd} ${ngaygpkd ? '('+ngaygpkd+')':''} - ${noigpkd}</div>
+                        <div><strong class="text-slate-500">PCCC:</strong> ${pccc} ${ngaypccc ? '('+ngaypccc+')':''} - ${noipccc}</div>
+                    </div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 space-y-3">
+                    <h5 class="font-bold text-blue-800 text-sm border-b pb-1"><i class="fa-solid fa-clock-rotate-left"></i> Lịch Sử Vi Phạm (${violations.length} lần)</h5>
+                    <div class="space-y-3">${violationsHtml}</div>
+                </div>
+
+                <div class="bg-white p-4 rounded-xl border border-slate-200 text-sm">
+                    <strong class="text-slate-500">Ghi chú:</strong> ${ghichu}
+                </div>
+            `;
+            document.getElementById('detail-modal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detail-modal').classList.add('hidden');
+        }
+
+        function copyCurrentDetailText() {
+            if (currentDetailIndex < 0) return;
+            const obj = objectsData[currentDetailIndex];
+            let text = `Cơ sở: ${getProp(obj, ['Tên cơ sở'])}\nĐịa chỉ: ${getProp(obj, ['Địa chỉ cơ sở'])}\nChủ cơ sở: ${getProp(obj, ['Họ và tên chủ cơ sở'])}\nSĐT: ${getProp(obj, ['Số điện thoại'])}\nNgành nghề: ${getProp(obj, ['Ngành nghề'])}\nSố bình CC: ${getProp(obj, ['Số lượng bình chữa cháy']) || 0}`;
+            navigator.clipboard.writeText(text).then(() => showToast('Đã sao chép thông tin cơ sở!', 'success'));
+        }
+
+        function editCurrentDetail() {
+            closeDetailModal();
+            openEditModal(currentDetailIndex);
+        }
+
+        function openAddModal() {
+            document.getElementById('form-modal-title').innerHTML = '<i class="fa-solid fa-plus-circle"></i> Thêm Cơ Sở Mới';
+            document.getElementById('edit-index').value = -1;
+            buildFormFields({});
+            renderViolationsForm([]);
+            document.getElementById('form-modal').classList.remove('hidden');
+        }
+
+        function openEditModal(index) {
+            document.getElementById('form-modal-title').innerHTML = '<i class="fa-solid fa-pen"></i> Chỉnh Sửa Thông Tin Cơ Sở';
+            document.getElementById('edit-index').value = index;
+            const obj = objectsData[index];
+            buildFormFields(obj);
+            renderViolationsForm(obj['violations'] || []);
+            document.getElementById('form-modal').classList.remove('hidden');
+        }
+
+        function closeFormModal() {
+            document.getElementById('form-modal').classList.add('hidden');
+        }
+
+        // QR Code Scanning cho Chủ cơ sở
+        function openQRScanModal() {
+            const dropdown = document.getElementById('dropdown-menu');
+            if (dropdown && !dropdown.classList.contains('hidden')) dropdown.classList.add('hidden');
+            document.getElementById('qr-modal').classList.remove('hidden');
+            
+            setTimeout(() => {
+                if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+                html5QrCode.start(
+                    { facingMode: "environment" }, 
+                    { fps: 10, qrbox: { width: 250, height: 250 } },
+                    (decodedText) => handleQRCodeResult(decodedText),
+                    (err) => {}
+                ).catch(err => console.error("Camera error:", err));
+            }, 300);
+        }
+
+        function closeQRScanModal() {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => document.getElementById('qr-modal').classList.add('hidden')).catch(() => document.getElementById('qr-modal').classList.add('hidden'));
+            } else {
+                document.getElementById('qr-modal').classList.add('hidden');
+            }
+        }
+
+        function scanQRFromFile(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (!html5QrCode) html5QrCode = new Html5Qrcode("qr-reader");
+            html5QrCode.scanFile(file, true)
+                .then(decodedText => handleQRCodeResult(decodedText))
+                .catch(() => showToast('Không tìm thấy mã QR hợp lệ trong ảnh!', 'error'));
+            e.target.value = '';
+        }
+
+        function handleQRCodeResult(qrText) {
+            closeQRScanModal();
+            showToast('Quét mã QR CCCD thành công!', 'success');
+            const parts = qrText.split('|');
+            let cccd = parts[0] || '';
+            let hoten = parts[2] || '';
+            let gioitinh = parts[4] || '';
+            let thuongtru = parts[5] || '';
+
+            const formModal = document.getElementById('form-modal');
+            if (formModal.classList.contains('hidden')) openAddModal();
+
+            setTimeout(() => {
+                setFieldVal('Số căn cước', cccd);
+                setFieldVal('Họ và tên chủ cơ sở', hoten);
+                setFieldVal('Năm sinh', '25/07/1980'); // Gán mặc định theo yêu cầu
+                setFieldVal('Tuổi', '46');
+                setFieldVal('Giới tính', gioitinh);
+                setFieldVal('Nơi thường trú', thuongtru);
+                setFieldVal('Nơi ở hiện nay', thuongtru);
+            }, 100);
+        }
+
+        function setFieldVal(fieldName, val) {
+            const inputs = document.querySelectorAll('#object-form input');
+            inputs.forEach(input => {
+                if (input.name.trim().toLowerCase() === fieldName.trim().toLowerCase()) input.value = val;
+            });
+        }
+
+        function buildFormFields(data) {
+            const container = document.getElementById('form-fields-container');
+            container.innerHTML = '';
+            columnsSchema.forEach(col => {
+                let val = '';
+                for (let k in data) {
+                    if (k.trim().toLowerCase() === col.trim().toLowerCase()) {
+                        val = data[k] !== undefined ? data[k] : '';
+                        break;
+                    }
+                }
+                // Cố định ngày tháng năm sinh chủ cơ sở nếu đúng trường Năm sinh hoặc Tuổi mặc định khi tạo mới
+                if (col === 'Năm sinh' && !val && data['Họ và tên chủ cơ sở'] === undefined) {
+                    val = '25/07/1980';
+                }
+                if (col === 'Tuổi' && !val && data['Họ và tên chủ cơ sở'] === undefined) {
+                    val = '46';
+                }
+
+                if ((col.toLowerCase().includes('ngày') || col.toLowerCase().includes('ngay')) && val) {
+                    val = formatDateString(val);
+                }
+                if (col.toLowerCase().includes('căn cước')) {
+                    val = formatCANCUOC(val);
+                }
+
+                container.innerHTML += `
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1">${col}</label>
+                        <input type="text" name="${col}" value="${val}" class="w-full px-3 py-2 border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                `;
+            });
+        }
+
+        // Render Violations Form
+        function renderViolationsForm(violations) {
+            const container = document.getElementById('violations-container');
+            container.innerHTML = '';
+            if (!violations || violations.length === 0) {
+                container.innerHTML = '<p class="text-slate-400 text-xs italic text-center py-2" id="no-violation-msg">Chưa có lần vi phạm nào. Nhấn "Thêm lần vi phạm" để thêm.</p>';
+                return;
+            }
+            violations.forEach((v, index) => appendViolationRow(v, index + 1));
+        }
+
+        function addViolationRow() {
+            const container = document.getElementById('violations-container');
+            const noMsg = document.getElementById('no-violation-msg');
+            if (noMsg) noMsg.remove();
+            const count = container.children.length + 1;
+            appendViolationRow({}, count);
+        }
+
+        function appendViolationRow(v, num) {
+            const container = document.getElementById('violations-container');
+            const div = document.createElement('div');
+            div.className = 'violation-row bg-slate-50 p-4 rounded-xl border border-slate-300 relative space-y-3';
+            div.innerHTML = `
+                <div class="flex justify-between items-center">
+                    <span class="text-xs font-bold text-red-800 uppercase bg-red-100 px-2.5 py-1 rounded-full"><i class="fa-solid fa-triangle-exclamation"></i> Lần vi phạm thứ <span class="v-num">${num}</span></span>
+                    <button type="button" onclick="removeViolationRow(this)" class="text-red-500 hover:text-red-700 text-xs font-medium px-2 py-1 rounded bg-red-50 hover:bg-red-100 transition"><i class="fa-solid fa-trash"></i> Xóa lần này</button>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Ngày tháng vi phạm</label>
+                        <input type="text" name="v_ngay" value="${formatDateString(v['Ngày tháng vi phạm']) || ''}" placeholder="DD/MM/YYYY" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Mức phạt</label>
+                        <input type="text" name="v_mucphat" value="${v['Mức phạt'] || ''}" placeholder="VD: 2.000.000 VNĐ" class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Đơn vị xử phạt</label>
+                        <input type="text" name="v_donvi" value="${v['Đơn vị xử phạt'] || ''}" placeholder="Công an phường..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Lỗi vi phạm</label>
+                        <input type="text" name="v_loi" value="${v['Lỗi vi phạm'] || ''}" placeholder="Mô tả lỗi vi phạm..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="sm:col-span-3">
+                        <label class="block text-[11px] font-semibold text-slate-700 mb-1">Hình thức xử phạt</label>
+                        <input type="text" name="v_hinhthuc" value="${v['Hình thức xử phạt'] || ''}" placeholder="VD: Phạt tiền và khắc phục hậu quả..." class="w-full px-3 py-1.5 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeViolationRow(btn) {
+            const row = btn.closest('.violation-row');
+            row.remove();
+            const rows = document.querySelectorAll('#violations-container .violation-row');
+            rows.forEach((r, idx) => r.querySelector('.v-num').innerText = idx + 1);
+            if (rows.length === 0) {
+                document.getElementById('violations-container').innerHTML = '<p class="text-slate-400 text-xs italic text-center py-2" id="no-violation-msg">Chưa có lần vi phạm nào. Nhấn "Thêm lần vi phạm" để thêm.</p>';
+            }
+        }
+
+        function saveObjectForm(e) {
+            e.preventDefault();
+            const formData = new FormData(document.getElementById('object-form'));
+            const index = parseInt(document.getElementById('edit-index').value);
+            let newObj = {};
+            columnsSchema.forEach(col => { 
+                let val = formData.get(col) || '';
+                if (col === 'Năm sinh' && !val) {
+                    val = '25/07/1980';
+                }
+                if (col === 'Tuổi' && !val) {
+                    val = '46';
+                }
+                if ((col.toLowerCase().includes('ngày') || col.toLowerCase().includes('ngay')) && val) {
+                    val = formatDateString(val);
+                }
+                if (col.toLowerCase().includes('căn cước')) {
+                    val = formatCANCUOC(val);
+                }
+                newObj[col] = val; 
+            });
+
+            // Thu thập lịch sử vi phạm
+            let violations = [];
+            const rows = document.querySelectorAll('#violations-container .violation-row');
+            rows.forEach(r => {
+                violations.push({
+                    'Ngày tháng vi phạm': formatDateString(r.querySelector('input[name="v_ngay"]').value),
+                    'Lỗi vi phạm': r.querySelector('input[name="v_loi"]').value,
+                    'Hình thức xử phạt': r.querySelector('input[name="v_hinhthuc"]').value,
+                    'Mức phạt': r.querySelector('input[name="v_mucphat"]').value,
+                    'Đơn vị xử phạt': r.querySelector('input[name="v_donvi"]').value
+                });
+            });
+            newObj['violations'] = violations;
+
+            if (index >= 0) {
+                objectsData[index] = newObj;
+            } else {
+                objectsData.push(newObj);
+            }
+            saveDataToStorage();
+            filteredData = [...objectsData];
+            renderObjects();
+            updateStatistics();
+            closeFormModal();
+            showToast('Lưu dữ liệu thành công!', 'success');
+        }
+
+        function deleteObject(index) {
+            if (confirm('Bạn có chắc chắn muốn xóa cơ sở này?')) {
+                objectsData.splice(index, 1);
+                saveDataToStorage();
+                filteredData = [...objectsData];
+                renderObjects();
+                updateStatistics();
+                showToast('Đã xóa cơ sở!', 'success');
+            }
+        }
+
+        function exportExcel() {
+            toggleMenu();
+            const exportRows = objectsData.map((obj, idx) => {
+                let flat = {};
+                columnsSchema.forEach(col => { flat[col] = obj[col] || ''; });
+                if (obj['violations'] && obj['violations'].length > 0) {
+                    obj['violations'].forEach((v, vI) => {
+                        let prefix = `Vi phạm ${vI + 1} - `;
+                        flat[prefix + 'Ngày tháng'] = v['Ngày tháng vi phạm'] || '';
+                        flat[prefix + 'Lỗi vi phạm'] = v['Lỗi vi phạm'] || '';
+                        flat[prefix + 'Hình thức xử phạt'] = v['Hình thức xử phạt'] || '';
+                        flat[prefix + 'Mức phạt'] = v['Mức phạt'] || '';
+                        flat[prefix + 'Đơn vị xử phạt'] = v['Đơn vị xử phạt'] || '';
+                    });
+                }
+                return flat;
+            });
+            const ws = XLSX.utils.json_to_sheet(exportRows);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "DanhSachCoSo");
+            XLSX.writeFile(wb, "Quan_ly_co_so_TDP67_ThanhCong.xlsx");
+        }
+
+        function triggerImportExcel() { toggleMenu(); document.getElementById('excel-file-input').click(); }
+        
+        function handleExcelImport(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = evt => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(evt.target.result), { type: 'array' });
+                    const sheet = wb.Sheets[wb.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(sheet, { defval: '', raw: false });
+                    
+                    tempImportedData = json.map(item => {
+                        for (let key in item) {
+                            let kLower = key.toLowerCase();
+                            if (kLower.includes('ngày') || kLower.includes('ngay')) {
+                                item[key] = formatDateString(item[key]);
+                            }
+                            if (kLower.includes('căn cước')) {
+                                item[key] = formatCANCUOC(item[key]);
+                            }
+                        }
+                        let violations = [];
+                        for (let i = 1; i <= 10; i++) {
+                            let prefix = `Vi phạm ${i} - `;
+                            let ngay = item[prefix + 'Ngày tháng'] || '';
+                            if (ngay) {
+                                violations.push({
+                                    'Ngày tháng vi phạm': formatDateString(ngay),
+                                    'Lỗi vi phạm': item[prefix + 'Lỗi vi phạm'] || '',
+                                    'Hình thức xử phạt': item[prefix + 'Hình thức xử phạt'] || '',
+                                    'Mức phạt': item[prefix + 'Mức phạt'] || '',
+                                    'Đơn vị xử phạt': item[prefix + 'Đơn vị xử phạt'] || ''
+                                });
+                            }
+                        }
+                        item['violations'] = violations;
+                        return item;
+                    });
+                    document.getElementById('import-info-text').innerText = `Đã đọc thành công ${tempImportedData.length} cơ sở từ file Excel. Bạn muốn thực hiện thao tác nào?`;
+                    document.getElementById('import-modal').classList.remove('hidden');
+                } catch(err) {
+                    showToast('Lỗi đọc file Excel!', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            e.target.value = '';
+        }
+
+        function processExcelImport(mode) {
+            if (mode === 'override') {
+                objectsData = tempImportedData;
+            } else {
+                objectsData = [...objectsData, ...tempImportedData];
+            }
+            saveDataToStorage();
+            filteredData = [...objectsData];
+            renderObjects();
+            updateStatistics();
+            closeImportModal();
+            showToast('Nhập dữ liệu Excel thành công!', 'success');
+        }
+
+        function closeImportModal() { document.getElementById('import-modal').classList.add('hidden'); }
+
+        function backupJSON() {
+            toggleMenu();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(objectsData));
+            const dl = document.createElement('a');
+            dl.setAttribute("href", dataStr);
+            dl.setAttribute("download", "backup_quan_ly_co_so_tdp67.json");
+            dl.click();
+        }
+
+        function triggerRestoreJSON() { toggleMenu(); document.getElementById('json-file-input').click(); }
+        function handleJSONRestore(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = evt => {
+                try {
+                    objectsData = JSON.parse(evt.target.result);
+                    saveDataToStorage();
+                    filteredData = [...objectsData];
+                    renderObjects();
+                    updateStatistics();
+                    showToast('Khôi phục dữ liệu thành công!', 'success');
+                } catch(err) {
+                    showToast('Lỗi định dạng file JSON!', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function confirmClearAll() { toggleMenu(); document.getElementById('clear-all-modal').classList.remove('hidden'); }
+        function proceedClearAll() {
+            objectsData = [];
+            saveDataToStorage();
+            filteredData = [];
+            renderObjects();
+            updateStatistics();
+            closeClearAllModal();
+            showToast('Đã xóa toàn bộ dữ liệu!', 'success');
+        }
+        function closeClearAllModal() { document.getElementById('clear-all-modal').classList.add('hidden'); }
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+        function showToast(msg, type='success') {
+            const t = document.getElementById('toast');
+            document.getElementById('toast-message').innerText = msg;
+            t.classList.remove('hidden');
+            setTimeout(() => t.classList.add('hidden'), 2500);
+        }
+    </script>
+</body>
+</html>
